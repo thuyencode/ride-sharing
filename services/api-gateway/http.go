@@ -36,7 +36,12 @@ func tripPreviewHandler() http.HandlerFunc {
 
 		var respBody any
 		if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-			writeErrorInJSON(w, http.StatusBadRequest, "Failed to parse JSON data from trip service", err)
+			writeErrorInJSON(
+				w,
+				http.StatusBadRequest,
+				"Failed to parse JSON data from trip service",
+				err,
+			)
 			return
 		}
 

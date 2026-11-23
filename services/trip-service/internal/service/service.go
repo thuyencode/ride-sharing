@@ -7,10 +7,9 @@ import (
 	"io"
 	"net/http"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/types"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type service struct {
@@ -25,12 +24,26 @@ func (s *service) CreateTrip(
 	ctx context.Context,
 	fare *domain.RideFareModel,
 ) (*domain.TripModel, error) {
-	t := &domain.TripModel{ID: primitive.NewObjectID(), UserID: fare.UserID, Status: domain.TripStatusPending, RideFare: fare}
+	t := &domain.TripModel{
+		ID:       primitive.NewObjectID(),
+		UserID:   fare.UserID,
+		Status:   domain.TripStatusPending,
+		RideFare: fare,
+	}
 	return s.repo.CreateTrip(ctx, t)
 }
 
-func (s *service) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*types.OSRMAPIResponse, error) {
-	url := fmt.Sprintf("https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson", pickup.Longitude, pickup.Latitude, destination.Longitude, destination.Latitude)
+func (s *service) GetRoute(
+	ctx context.Context,
+	pickup, destination *types.Coordinate,
+) (*types.OSRMAPIResponse, error) {
+	url := fmt.Sprintf(
+		"https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson",
+		pickup.Longitude,
+		pickup.Latitude,
+		destination.Longitude,
+		destination.Latitude,
+	)
 
 	resp, err := http.Get(url)
 	if err != nil {
