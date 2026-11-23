@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"ride-sharing/shared/contracts"
 )
 
 func writeJSON(w http.ResponseWriter, status int, data any) error {
@@ -12,21 +13,13 @@ func writeJSON(w http.ResponseWriter, status int, data any) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-type errorResponse struct {
-	Error   string `json:"error"`
-	Details string `json:"details,omitempty"`
-}
-
 func writeErrorInJSON(w http.ResponseWriter, status int, message string, err error) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	resp := errorResponse{Error: message, Details: err.Error()}
+	resp := contracts.APIResponse{Data: err.Error(), Error: &contracts.APIError{Code: http.StatusText(status), Message: message}}
 
 	if status == http.StatusInternalServerError {
-		resp.Details = ""
+		resp.Data = ""
 		slog.Error("Internal error", "err", err)
 	}
 
-	return json.NewEncoder(w).Encode(resp)
+	return writeJSON(w, status, resp)
 }

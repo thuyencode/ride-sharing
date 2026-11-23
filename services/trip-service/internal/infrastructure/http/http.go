@@ -2,9 +2,11 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"log/slog"
 	"net/http"
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/types"
 )
 
@@ -30,10 +32,9 @@ func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 			return
 		}
 
-		fare := &domain.RideFareModel{UserID: "67"}
-		t, err := s.Service.CreateTrip(r.Context(), fare)
+		t, err := s.Service.GetRoute(r.Context(), &reqBody.Pickup, &reqBody.Destination)
 		if err != nil {
-			slog.Error("Failed to create trip", "err", err)
+			log.Println(err)
 			return
 		}
 
@@ -47,21 +48,13 @@ func writeJSON(w http.ResponseWriter, status int, data any) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-type errorResponse struct {
-	Error   string `json:"error"`
-	Details string `json:"details,omitempty"`
-}
-
 func writeErrorInJSON(w http.ResponseWriter, status int, message string, err error) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	resp := errorResponse{Error: message, Details: err.Error()}
+	resp := contracts.APIResponse{Data: err.Error(), Error: &contracts.APIError{Code: http.StatusText(status), Message: message}}
 
 	if status == http.StatusInternalServerError {
+		resp.Data = ""
 		slog.Error("Internal error", "err", err)
-		resp.Details = ""
 	}
 
-	return json.NewEncoder(w).Encode(resp)
+	return writeJSON(w, status, resp)
 }

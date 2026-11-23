@@ -2,8 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/shared/types"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,4 +27,27 @@ func (s *service) CreateTrip(
 ) (*domain.TripModel, error) {
 	t := &domain.TripModel{ID: primitive.NewObjectID(), UserID: fare.UserID, Status: domain.TripStatusPending, RideFare: fare}
 	return s.repo.CreateTrip(ctx, t)
+}
+
+func (s *service) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*types.OSRMAPIResponse, error) {
+	url := fmt.Sprintf("https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson", pickup.Longitude, pickup.Latitude, destination.Longitude, destination.Latitude)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch from OSRM API: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var routeResp types.OSRMAPIResponse
+	if err := json.Unmarshal(body, &routeResp); err != nil {
+		return nil, fmt.Errorf("failed to parse response body: %w", err)
+	}
+
+	return &routeResp, nil
 }
