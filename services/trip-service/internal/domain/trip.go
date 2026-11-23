@@ -13,10 +13,10 @@ const (
 )
 
 type TripModel struct {
-	ID       primitive.ObjectID
-	UserID   string
-	Status   TripStatus
-	RideFare *RideFareModel
+	ID       primitive.ObjectID `json:"id"`
+	UserID   string             `json:"userID"`
+	Status   TripStatus         `json:"status"`
+	RideFare *RideFareModel     `json:"rideFare"`
 }
 
 type TripRepository interface {

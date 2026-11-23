@@ -1,32 +1,24 @@
 package main
 
 import (
-	"context"
 	"log"
-	"log/slog"
-	"os/signal"
-	"syscall"
+	"net/http"
 
-	"ride-sharing/services/trip-service/internal/domain"
+	h "ride-sharing/services/trip-service/internal/infrastructure/http"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	inmemRepo := repository.NewInmemRepository()
 	service := service.NewService(inmemRepo)
+	mux := http.NewServeMux()
+	httpHandler := h.HttpHandler{Service: service}
 
-	fare := &domain.RideFareModel{ID: primitive.NewObjectID(), UserID: "67", PackageSlug: ""}
-	t, err := service.CreateTrip(ctx, fare)
-	if err != nil {
-		slog.Error("error creating trip", "error", err)
+	mux.HandleFunc("POST /preview", httpHandler.TripPreviewHandler())
+
+	server := &http.Server{Addr: ":8083", Handler: mux}
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("HTTP server error: %v", err)
 	}
-	log.Println(t)
-
-	<-ctx.Done()
 }
