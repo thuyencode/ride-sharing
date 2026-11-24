@@ -1,8 +1,8 @@
-package main
+package types
 
 import "ride-sharing/shared/types"
 
-type tripPreviewRequest struct {
+type TripPreviewRequest struct {
 	UserID      string           `json:"userID"`
 	Pickup      types.Coordinate `json:"pickup"`
 	Destination types.Coordinate `json:"destination"`

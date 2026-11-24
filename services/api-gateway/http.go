@@ -6,12 +6,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/contracts"
 )
 
 func tripPreviewHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var reqBody tripPreviewRequest
+		var reqBody types.TripPreviewRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

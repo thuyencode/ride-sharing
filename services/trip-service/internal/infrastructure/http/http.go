@@ -7,25 +7,19 @@ import (
 	"net/http"
 
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/types"
 )
 
 type HttpHandler struct {
 	Service domain.TripService
 }
 
-type tripPreviewRequest struct {
-	UserID      string           `json:"userID"`
-	Pickup      types.Coordinate `json:"pickup"`
-	Destination types.Coordinate `json:"destination"`
-}
-
 func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
-		var reqBody tripPreviewRequest
+		var reqBody types.TripPreviewRequest
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 			if err := writeErrorInJSON(
 				w,
