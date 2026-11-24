@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -34,7 +33,7 @@ func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 
 		t, err := s.Service.GetRoute(r.Context(), &reqBody.Pickup, &reqBody.Destination)
 		if err != nil {
-			log.Println(err)
+			slog.Error("Failed to get route from trip service", "error", err)
 			return
 		}
 

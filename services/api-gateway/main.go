@@ -1,8 +1,13 @@
 package main
 
 import (
-	"log"
+	"context"
+	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"ride-sharing/shared/env"
 )
@@ -10,15 +15,36 @@ import (
 var httpAddr = env.GetString("HTTP_ADDR", ":8081")
 
 func main() {
-	log.Println("Starting API Gateway")
+	slog.Info("Starting API Gateway")
 
 	mux := http.NewServeMux()
-
 	mux.HandleFunc("POST /trip/preview", tripPreviewHandler())
 
 	server := &http.Server{Addr: httpAddr, Handler: mux}
+	serverErrCh := make(chan error, 1)
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("HTTP server error: %v", err)
+	go func() {
+		slog.Info("HTTP server listening", "address", httpAddr)
+		serverErrCh <- server.ListenAndServe()
+	}()
+
+	shutdownCh := make(chan os.Signal, 1)
+	signal.Notify(shutdownCh, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrCh:
+		slog.Error("Failed to start HTTP server", "error", err)
+	case sig := <-shutdownCh:
+		slog.Info("HTTP server is shutting down", "signal", sig.String())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			slog.Error("Failed to shutdown HTTP server gracefully", "error", err)
+			if err := server.Close(); err != nil {
+				slog.Error("Failed to close HTTP server immediately", "error", err)
+			}
+		}
 	}
 }
