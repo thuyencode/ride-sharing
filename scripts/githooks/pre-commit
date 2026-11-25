@@ -3,9 +3,8 @@
 go_files=$(git diff --name-only --cached | grep .go)
 
 if [ -n "$go_files" ]; then
-    for go_file in $go_files
-    do
-        golangci-lint run --fix $go_file
+    for go_file in $go_files; do
+        golangci-lint fmt "$go_file"
     done
 fi
 
