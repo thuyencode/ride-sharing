@@ -8,6 +8,7 @@ import (
 
 	"ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/contracts"
+	"ride-sharing/shared/util"
 )
 
 func tripPreviewHandler() http.HandlerFunc {
@@ -15,14 +16,19 @@ func tripPreviewHandler() http.HandlerFunc {
 		var reqBody types.TripPreviewRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			util.ResponseErrorInJSON(
+				w,
+				http.StatusBadRequest,
+				"Failed to deserialize JSON body",
+				err,
+			)
 			return
 		}
 
 		defer r.Body.Close()
 
 		if reqBody.UserID == "" {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			util.ResponseErrorInJSON(w, http.StatusBadRequest, "user id must not be empty", nil)
 			return
 		}
 
@@ -37,7 +43,7 @@ func tripPreviewHandler() http.HandlerFunc {
 
 		var respBody any
 		if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-			writeErrorInJSON(
+			util.ResponseErrorInJSON(
 				w,
 				http.StatusBadRequest,
 				"Failed to parse JSON data from trip service",
@@ -46,6 +52,6 @@ func tripPreviewHandler() http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, contracts.APIResponse{Data: respBody})
+		util.ResponseInJSON(w, http.StatusOK, contracts.APIResponse{Data: respBody})
 	}
 }

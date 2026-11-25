@@ -7,7 +7,7 @@ import (
 
 	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/services/trip-service/pkg/types"
-	"ride-sharing/shared/contracts"
+	"ride-sharing/shared/util"
 )
 
 type HttpHandler struct {
@@ -20,14 +20,7 @@ func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 
 		var reqBody types.TripPreviewRequest
 		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-			if err := writeErrorInJSON(
-				w,
-				http.StatusBadRequest,
-				"JSON serializing failed",
-				err,
-			); err != nil {
-				slog.Error("Failed to write response", "err", err)
-			}
+			util.ResponseErrorInJSON(w, http.StatusBadRequest, "JSON serializing failed", err)
 			return
 		}
 
@@ -37,26 +30,6 @@ func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, t)
+		util.ResponseInJSON(w, http.StatusOK, t)
 	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) error {
-	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
-	return json.NewEncoder(w).Encode(data)
-}
-
-func writeErrorInJSON(w http.ResponseWriter, status int, message string, err error) error {
-	resp := contracts.APIResponse{
-		Data:  err.Error(),
-		Error: &contracts.APIError{Code: http.StatusText(status), Message: message},
-	}
-
-	if status == http.StatusInternalServerError {
-		resp.Data = ""
-		slog.Error(message, "error", err)
-	}
-
-	return writeJSON(w, status, resp)
 }
