@@ -19,6 +19,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /trip/preview", tripPreviewHandler())
+	mux.HandleFunc("/ws/drivers", driversWebsocketHandler())
+	mux.HandleFunc("/ws/riders", ridersWebsocketHandler())
 
 	server := &http.Server{Addr: httpAddr, Handler: mux}
 	serverErrCh := make(chan error, 1)

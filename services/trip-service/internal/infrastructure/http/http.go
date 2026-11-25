@@ -42,8 +42,8 @@ func (s *HttpHandler) TripPreviewHandler() http.HandlerFunc {
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) error {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(data)
 }
 
@@ -55,7 +55,7 @@ func writeErrorInJSON(w http.ResponseWriter, status int, message string, err err
 
 	if status == http.StatusInternalServerError {
 		resp.Data = ""
-		slog.Error("Internal error", "err", err)
+		slog.Error(message, "error", err)
 	}
 
 	return writeJSON(w, status, resp)

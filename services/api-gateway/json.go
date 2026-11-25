@@ -4,26 +4,19 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-
-	"ride-sharing/shared/contracts"
 )
 
-func writeJSON(w http.ResponseWriter, status int, data any) error {
+func writeJSON(w http.ResponseWriter, code int, payload any) {
+	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		slog.Error("Failed to write HTTP response", "error", err)
+	}
 }
 
-func writeErrorInJSON(w http.ResponseWriter, status int, message string, err error) error {
-	resp := contracts.APIResponse{
-		Data:  err.Error(),
-		Error: &contracts.APIError{Code: http.StatusText(status), Message: message},
+func writeErrorInJSON(w http.ResponseWriter, code int, message string, err error) {
+	if code >= 500 {
+		slog.Error("Internal server", "error", err)
 	}
-
-	if status == http.StatusInternalServerError {
-		resp.Data = ""
-		slog.Error("Internal error", "err", err)
-	}
-
-	return writeJSON(w, status, resp)
+	writeJSON(w, code, map[string]string{"error": message})
 }

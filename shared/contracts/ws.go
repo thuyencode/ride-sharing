@@ -4,8 +4,8 @@ import "encoding/json"
 
 // WSMessage is the message structure for the WebSocket.
 type WSMessage struct {
-	Type string `json:"type"`
-	Data any    `json:"data"`
+	Type WSMessageType `json:"type"`
+	Data any           `json:"data"`
 }
 
 type WSDriverMessage struct {
