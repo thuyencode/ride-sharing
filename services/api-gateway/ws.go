@@ -20,6 +20,18 @@ var upgrader = websocket.Upgrader{
 
 func driversWebsocketHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.URL.Query().Get("userID")
+		if userID == "" {
+			util.ResponseErrorInJSON(w, http.StatusBadRequest, "No user id provided", nil)
+			return
+		}
+
+		packageSlug := r.URL.Query().Get("packageSlug")
+		if packageSlug == "" {
+			util.ResponseErrorInJSON(w, http.StatusBadRequest, "No package slug provided", nil)
+			return
+		}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
@@ -30,26 +42,6 @@ func driversWebsocketHandler() http.HandlerFunc {
 				slog.Error("Failed to close WebSocket connection", "error", err)
 			}
 		}()
-
-		userID := r.URL.Query().Get("userID")
-		if userID == "" {
-			if err := conn.WriteJSON(
-				map[string]string{"error": "No user id provided"},
-			); err != nil {
-				slog.Error("Failed to write WebSocket response", "error", err)
-			}
-			return
-		}
-
-		packageSlug := r.URL.Query().Get("packageSlug")
-		if packageSlug == "" {
-			if err := conn.WriteJSON(
-				map[string]string{"error": "No package slug provided"},
-			); err != nil {
-				slog.Error("Failed to write WebSocket response", "error", err)
-			}
-			return
-		}
 
 		type Driver struct {
 			Id             string `json:"id"`
@@ -89,6 +81,12 @@ func driversWebsocketHandler() http.HandlerFunc {
 
 func ridersWebsocketHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.URL.Query().Get("userID")
+		if userID == "" {
+			util.ResponseErrorInJSON(w, http.StatusBadRequest, "No user id provided", nil)
+			return
+		}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
@@ -99,16 +97,6 @@ func ridersWebsocketHandler() http.HandlerFunc {
 				slog.Error("Failed to close WebSocket connection", "error", err)
 			}
 		}()
-
-		userID := r.URL.Query().Get("userID")
-		if userID == "" {
-			if err := conn.WriteJSON(
-				map[string]string{"error": "No user id provided"},
-			); err != nil {
-				slog.Error("Failed to write WebSocket response", "error", err)
-			}
-			return
-		}
 
 		for {
 			_, message, err := conn.ReadMessage()
