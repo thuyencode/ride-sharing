@@ -9,7 +9,7 @@ import (
 	"ride-sharing/shared/util"
 )
 
-var upgrader = websocket.Upgrader{
+var wsUpgrader = websocket.Upgrader{
 	CheckOrigin: func(_ *http.Request) bool {
 		return true
 	},
@@ -32,7 +32,7 @@ func driversWebsocketHandler() http.HandlerFunc {
 			return
 		}
 
-		conn, err := upgrader.Upgrade(w, r, nil)
+		conn, err := wsUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
@@ -42,14 +42,6 @@ func driversWebsocketHandler() http.HandlerFunc {
 				slog.Error("Failed to close WebSocket connection", "error", err)
 			}
 		}()
-
-		type Driver struct {
-			Id             string `json:"id"`
-			Name           string `json:"name"`
-			ProfilePicture string `json:"profilePicture"`
-			CarPlate       string `json:"carPlate"`
-			PackageSluq    string `json:"packageSluq"`
-		}
 
 		msg := contracts.WSMessage{
 			Type: contracts.DriverCmdRegister,
@@ -87,7 +79,7 @@ func ridersWebsocketHandler() http.HandlerFunc {
 			return
 		}
 
-		conn, err := upgrader.Upgrade(w, r, nil)
+		conn, err := wsUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
