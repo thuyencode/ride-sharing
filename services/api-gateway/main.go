@@ -22,7 +22,7 @@ func main() {
 	mux.HandleFunc("/ws/drivers", driversWebsocketHandler())
 	mux.HandleFunc("/ws/riders", ridersWebsocketHandler())
 
-	handler := enableCORS([]string{"*"})(mux)
+	handler := enableCORS("*")(mux)
 	server := &http.Server{Addr: httpAddr, Handler: handler}
 	serverErrCh := make(chan error, 1)
 
