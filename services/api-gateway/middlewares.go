@@ -2,11 +2,19 @@ package main
 
 import (
 	"net/http"
+	"slices"
 )
 
 type middleware func(next http.Handler) http.HandlerFunc
 
-func enableCORS(origin string) middleware {
+func applyMiddleware(handler http.Handler, middlwares ...middleware) http.Handler {
+	for _, m := range slices.Backward(middlwares) {
+		handler = m(handler)
+	}
+	return handler
+}
+
+func prelight(origin string) middleware {
 	return func(next http.Handler) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
