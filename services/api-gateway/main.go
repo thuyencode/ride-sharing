@@ -31,13 +31,13 @@ func main() {
 		serverErrCh <- server.ListenAndServe()
 	}()
 
-	shutdownCh := make(chan os.Signal, 1)
-	signal.Notify(shutdownCh, syscall.SIGINT, syscall.SIGTERM)
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case err := <-serverErrCh:
 		slog.Error("Failed to start HTTP server", "error", err)
-	case sig := <-shutdownCh:
+	case sig := <-signalCh:
 		slog.Info("HTTP server is shutting down", "signal", sig.String())
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
